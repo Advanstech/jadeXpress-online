@@ -24,3 +24,9 @@ reports
 *.sln
 *.sw?
 code_template.zip
+
+# Build artifacts
+.next
+out
+*.tsbuildinfo
+.turbo
