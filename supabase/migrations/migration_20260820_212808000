@@ -1,0 +1,10 @@
+alter table public.profiles
+  add column if not exists pin_hash text,
+  add column if not exists pin_salt text,
+  add column if not exists pin_fail_count int not null default 0,
+  add column if not exists pin_locked_until timestamptz,
+  add column if not exists has_pin boolean generated always as (pin_hash is not null) stored;
+
+revoke update on public.profiles from authenticated;
+grant update (full_name, phone, avatar_url) on public.profiles to authenticated;
+grant update (pin_hash, pin_salt, pin_fail_count, pin_locked_until) on public.profiles to service_role;
