@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Link } from "@/components/Link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { CheckCircle2, PackageSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderView } from "@/components/order/OrderView";
 import { Reveal } from "@/components/motion/Reveal";
@@ -14,21 +15,40 @@ export default function CheckoutSuccess() {
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string>("");
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const raw = sessionStorage.getItem("jadexpress_last_order");
     const parsed = raw ? (JSON.parse(raw) as { orderNumber: string; email: string }) : null;
     const mail = parsed?.email ?? "";
     setEmail(mail);
-    if (parsed?.orderNumber && mail) {
-      trackOrder(parsed.orderNumber, mail)
-        .then((o) => setOrder(o))
-        .catch(() => setOrder(null))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [orderNumber]);
+
+    const confirm = async () => {
+      if (!parsed?.orderNumber || !mail) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const o = await trackOrder(parsed.orderNumber, mail);
+        setOrder(o);
+        const ref = searchParams?.get("reference") || searchParams?.get("trxref");
+        if (ref && o?.id) {
+          await api.put(`storefront/orders/${o.id}/pay`, {
+            reference: ref,
+            gateway: "paystack",
+          });
+          const updated = await trackOrder(parsed.orderNumber, mail);
+          setOrder(updated);
+        }
+      } catch {
+        setOrder(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    confirm();
+  }, [orderNumber, searchParams]);
 
   return (
     <div className="bg-background">

@@ -257,14 +257,32 @@ export default function Checkout() {
       };
 
       const order = await api.post<ApiOrder>("storefront/orders", payload);
-      const { orderNumber } = order;
+      const { orderNumber, id } = order;
 
       sessionStorage.setItem(
         "jadexpress_last_order",
-        JSON.stringify({ orderNumber, email: shippingAddress.email }),
+        JSON.stringify({ orderNumber, email: shippingAddress.email, orderId: id }),
       );
 
-      // Simulate the payment gateway handshake.
+      if (paymentGateway === "paystack") {
+        setProcessing(true);
+        const { authorization_url, reference } = await api.post<{
+          authorization_url: string;
+          reference: string;
+        }>("payments/paystack/initialize", {
+          email: shippingAddress.email,
+          amount: Math.round(total * 100),
+          currency: "GHS",
+          callbackUrl: `${window.location.origin}/checkout/success/${orderNumber}`,
+          metadata: { orderId: id, orderNumber, method },
+        });
+        if (authorization_url) {
+          window.location.href = authorization_url;
+          return;
+        }
+      }
+
+      // Demo / MoMo path — simulate the payment handshake.
       setProcessing(true);
       await new Promise((r) => setTimeout(r, 1800));
       clearCart();

@@ -17,6 +17,7 @@ export interface TrackedTimelineEvent {
 }
 
 export interface TrackedOrder {
+  id: string;
   orderNumber: string;
   email: string;
   status: string;
@@ -39,6 +40,7 @@ interface ApiOrderItem {
 }
 
 interface ApiOrder {
+  id: string;
   orderNumber: string;
   email: string;
   status: string;
@@ -63,6 +65,7 @@ export async function trackOrder(
   try {
     const o = await api.get<ApiOrder>(url);
     return {
+      id: o.id,
       orderNumber: o.orderNumber,
       email: o.email,
       status: o.status,
