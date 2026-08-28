@@ -17,6 +17,11 @@ export interface Product {
   slug: string;
   name: string;
   brand: string;
+  genericName?: string;
+  dosageForm?: string;
+  strength?: string;
+  packSize?: number;
+  unit?: string;
   categoryId: string | null;
   categorySlug: CategorySlug;
   price: number; // GHS

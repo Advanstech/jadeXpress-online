@@ -97,16 +97,22 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                 </NavLink>
               ))}
               {isAdmin && (
-                <NavLink
-                  to="/admin"
-                  className="mt-2 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-secondary"
-                >
-                  <ShieldCheck className="size-4" />
-                  Admin dashboard
-                  <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {role}
-                  </span>
-                </NavLink>
+                <div className="mt-3 mb-1 p-0.5 rounded-xl bg-gradient-to-r from-emerald-500 via-primary to-amber-500 shadow-md">
+                  <NavLink
+                    to="/admin"
+                    className="flex items-center justify-between rounded-[10px] bg-gradient-to-r from-emerald-950 to-primary px-3 py-2.5 text-sm font-semibold text-white transition-all hover:from-emerald-900 hover:to-primary"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="grid size-6 place-items-center rounded-md bg-amber-400/20 text-amber-300 ring-1 ring-amber-400/40 shrink-0">
+                        <ShieldCheck className="size-3.5" />
+                      </span>
+                      <span>Admin Console</span>
+                    </div>
+                    <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-slate-950 shrink-0">
+                      {role}
+                    </span>
+                  </NavLink>
+                </div>
               )}
               <Button
                 variant="ghost"

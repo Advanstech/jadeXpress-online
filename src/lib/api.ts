@@ -104,11 +104,14 @@ async function parseError(res: Response): Promise<ApiError> {
   return new ApiError(message, res.status);
 }
 
+let isRefreshing = false;
+let refreshPromise: Promise<unknown> | null = null;
+
 export async function apiRequest<T>(
   method: string,
   path: string,
   body?: unknown,
-  { skipAuth }: { skipAuth?: boolean } = {},
+  { skipAuth, isRetry }: { skipAuth?: boolean; isRetry?: boolean } = {},
 ): Promise<T> {
   const url = path.startsWith("http") ? path : `${API_BASE}/${path.replace(/^\//, "")}`;
   const headers: Record<string, string> = {};
@@ -130,7 +133,29 @@ export async function apiRequest<T>(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  if (!res.ok) throw await parseError(res);
+  if (!res.ok) {
+    // If 401 Unauthorized and not already retrying or skipping auth, attempt token refresh
+    if (res.status === 401 && !skipAuth && !isRetry) {
+      const stored = getTokens();
+      if (stored?.refreshToken) {
+        try {
+          if (!isRefreshing) {
+            isRefreshing = true;
+            refreshPromise = refreshSession(stored.refreshToken, stored.type).finally(() => {
+              isRefreshing = false;
+              refreshPromise = null;
+            });
+          }
+          await refreshPromise;
+          // Retry original request with new token
+          return apiRequest<T>(method, path, body, { skipAuth: false, isRetry: true });
+        } catch {
+          clearTokens();
+        }
+      }
+    }
+    throw await parseError(res);
+  }
 
   if (res.status === 204 || res.headers.get("content-length") === "0") {
     return undefined as T;

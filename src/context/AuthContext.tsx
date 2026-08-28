@@ -234,23 +234,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       try {
-        if (user.type === "customer") {
-          const res = await api.put<CustomerLoginResponse["customer"]>("storefront/auth/me", payload);
-          setProfile({
-            ...profile,
-            full_name: buildFullName(res.firstName, res.lastName),
-            phone: res.phone,
-            avatar_url: res.avatarUrl,
-          });
-        } else {
-          const res = await api.put<StaffLoginResponse["staff"]>(`staff/${profile.id}`, payload);
-          setProfile({
-            ...profile,
-            full_name: buildFullName(res.firstName, res.lastName),
-            phone: res.phone ?? profile.phone,
-            avatar_url: res.avatarUrl,
-          });
-        }
+        const res = await api.put<CustomerLoginResponse["customer"]>("storefront/auth/me", payload);
+        setProfile({
+          ...profile,
+          full_name: buildFullName(res.firstName, res.lastName),
+          phone: res.phone ?? data.phone ?? profile.phone,
+          avatar_url: res.avatarUrl ?? data.avatar_url ?? profile.avatar_url,
+        });
         return { error: null };
       } catch (e) {
         return { error: (e as Error).message ?? "Could not update profile." };
@@ -276,7 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const changePassword = useCallback(
     async (currentPassword: string, newPassword: string) => {
-      if (!user || user.type !== "customer") return { error: "Not signed in or not supported." };
+      if (!user) return { error: "Not signed in." };
       try {
         await api.put("storefront/auth/me/password", { currentPassword, newPassword });
         return { error: null };

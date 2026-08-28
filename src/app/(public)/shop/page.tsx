@@ -1,14 +1,15 @@
 "use client";
-import { useState } from "react";
-import { Search, SlidersHorizontal, PackageOpen } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, SlidersHorizontal, PackageOpen, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
-  useProducts,
+  useInfiniteProducts,
   type ProductFilters,
   type ProductSort,
 } from "@/hooks/useProducts";
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
+import { mapApiProduct } from "@/lib/mappers";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductFiltersContent } from "@/components/product/ProductFilters";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,35 @@ export default function Shop() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: categories } = useCategories();
   const { data: brands } = useBrands();
-  const { data: products, isLoading } = useProducts(filters);
-  const list = products ?? [];
+  
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteProducts(filters, 24);
+
+  const list = data?.pages.flatMap((page) => page.data.map(mapApiProduct)) ?? [];
+  const total = data?.pages[0]?.meta?.total ?? list.length;
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!sentinelRef.current || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const sidebar = (
     <ProductFiltersContent
@@ -129,17 +157,19 @@ export default function Shop() {
             </div>
 
             <p className="mb-5 text-sm text-muted-foreground">
-              {isLoading ? "Loading…" : `${list.length} ${list.length === 1 ? "product" : "products"}`}
+              {isLoading
+                ? "Loading products…"
+                : `Showing ${list.length} of ${total} ${total === 1 ? "product" : "products"}`}
             </p>
 
             {isLoading ? (
               <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-square rounded-lg" />
+                  <Skeleton key={i} className="aspect-square rounded-2xl" />
                 ))}
               </div>
             ) : list.length === 0 ? (
-              <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border bg-secondary/40 py-16 text-center">
+              <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border bg-secondary/40 py-16 text-center">
                 <PackageOpen className="size-10 text-muted-foreground" />
                 <div>
                   <p className="font-display text-lg font-semibold text-foreground">
@@ -159,13 +189,40 @@ export default function Shop() {
                 </Button>
               </div>
             ) : (
-              <StaggerGroup className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
-                {list.map((p) => (
-                  <motion.div key={p.id} variants={staggerItem}>
-                    <ProductCard product={p} />
-                  </motion.div>
-                ))}
-              </StaggerGroup>
+              <>
+                <StaggerGroup className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
+                  {list.map((p) => (
+                    <motion.div key={p.id} variants={staggerItem}>
+                      <ProductCard product={p} />
+                    </motion.div>
+                  ))}
+                </StaggerGroup>
+
+                {/* Infinite Scroll Trigger Sentinel */}
+                <div
+                  ref={sentinelRef}
+                  className="mt-10 flex min-h-[60px] items-center justify-center py-6"
+                >
+                  {isFetchingNextPage ? (
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Loader2 className="size-5 animate-spin text-primary" />
+                      Loading more products…
+                    </div>
+                  ) : hasNextPage ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchNextPage()}
+                      className="rounded-full px-6"
+                    >
+                      Load more products
+                    </Button>
+                  ) : list.length > 0 ? (
+                    <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                      All {total} products loaded
+                    </span>
+                  ) : null}
+                </div>
+              </>
             )}
           </div>
         </div>

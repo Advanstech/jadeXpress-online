@@ -6,8 +6,10 @@ import {
   MapPin,
   Package,
   ShoppingBag,
+  ShieldCheck,
+  ExternalLink,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, useAdmin } from "@/context/AuthContext";
 import { useOrders } from "@/hooks/useOrders";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useAddresses } from "@/hooks/useAddresses";
@@ -25,6 +27,7 @@ const stats = [
 
 export default function AccountOverview() {
   const { profile } = useAuth();
+  const { isAdmin, role } = useAdmin();
   const { data: orders, isLoading } = useOrders();
   const { products: wishlist } = useWishlist();
   const { data: addresses } = useAddresses();
@@ -40,14 +43,60 @@ export default function AccountOverview() {
   return (
     <div className="space-y-8">
       <Reveal>
-        <span className="eyebrow">Account</span>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground">
-          Welcome back, {name.split(" ")[0]}
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Here's a snapshot of your JadeXpress account.
-        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="eyebrow">Account</span>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground">
+              Welcome back, {name.split(" ")[0]}
+            </h1>
+            <p className="mt-1 text-muted-foreground">
+              Here's a snapshot of your JadeXpress account.
+            </p>
+          </div>
+
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <Badge className="bg-primary/15 text-primary border border-primary/30 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+                Super Admin ({role})
+              </Badge>
+              <Button asChild size="sm" className="shadow-gold">
+                <Link to="/admin">
+                  <ShieldCheck className="mr-1.5 size-4" />
+                  Admin Dashboard
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
       </Reveal>
+
+      {isAdmin && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 shadow-soft">
+          <div className="flex items-center gap-3">
+            <span className="grid size-12 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md">
+              <ShieldCheck className="size-6" />
+            </span>
+            <div>
+              <p className="font-display font-semibold text-foreground">
+                Enterprise & POS Management Portal
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Full administrative access to Inventory, Suppliers, Accounting, Sales & Point of Sale.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin">Storefront Admin</Link>
+            </Button>
+            <Button asChild size="sm" className="shadow-gold">
+              <a href="https://jade-xpress-pos.vercel.app" target="_blank" rel="noreferrer">
+                POS Portal <ExternalLink className="ml-1 size-3.5" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         {stats.map((s) => (

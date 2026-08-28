@@ -1,9 +1,0 @@
-create table if not exists public.product_insights (
-  id uuid primary key default gen_random_uuid(),
-  product_id uuid not null unique references public.products(id) on delete cascade,
-  content jsonb not null default '{}'::jsonb,
-  updated_at timestamptz not null default now()
-);
-alter table public.product_insights enable row level security;
-drop policy if exists "product_insights_read_all" on public.product_insights;
-create policy "product_insights_read_all" on public.product_insights for select using (true);

@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, Clock, Mail, MapPin, MessageCircle, Phone, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,22 +9,51 @@ import { Textarea } from "@/components/ui/textarea";
 import { Reveal } from "@/components/motion/Reveal";
 import { ContactMap } from "@/components/ContactMap";
 import { SITE } from "@/config/site";
+import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Contact() {
+  const { user, profile } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (user && !name) {
+      setName(profile?.full_name || "");
+      setEmail(user.email || "");
+      if (profile?.phone) setPhone(profile.phone);
+    }
+  }, [user, profile, name]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !message) {
-      toast.error("Please complete the form.");
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      toast.error("Please fill in your name, email, and message.");
       return;
     }
     setSending(true);
-    toast.info("Contact form is not connected to the API yet.");
-    setSending(false);
+    try {
+      await api.post("storefront/contact", {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        subject: subject.trim() || "General Inquiry",
+        message: message.trim(),
+      });
+      setSubmitted(true);
+      toast.success("Thank you! Your message has been received.");
+      setMessage("");
+      setSubject("");
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || "Failed to send message. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const channels = [
@@ -92,35 +121,97 @@ export default function Contact() {
           </Reveal>
 
           <Reveal delay={0.1}>
-            <form
-              onSubmit={submit}
-              className="rounded-lg border border-border bg-card p-6 shadow-soft"
-            >
-              <h2 className="font-display text-xl font-semibold text-foreground">
-                Send us a message
-              </h2>
-              <div className="mt-4 space-y-4">
-                <div>
-                  <Label className="mb-1.5 block text-sm font-medium">Name</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} />
+            <div className="rounded-lg border border-border bg-card p-6 shadow-soft">
+              {submitted ? (
+                <div className="py-8 text-center space-y-4">
+                  <div className="mx-auto grid size-16 place-items-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 animate-in zoom-in-50 duration-300">
+                    <CheckCircle2 className="size-8" />
+                  </div>
+                  <h3 className="font-display text-2xl font-bold text-foreground">
+                    Message Sent!
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Thank you for reaching out to JadeXpress. Our customer support team has received your message and will reply to <span className="font-medium text-foreground">{email}</span> shortly.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSubmitted(false)}
+                    className="mt-2"
+                  >
+                    Send another message
+                  </Button>
                 </div>
-                <div>
-                  <Label className="mb-1.5 block text-sm font-medium">Email</Label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <div>
-                  <Label className="mb-1.5 block text-sm font-medium">Message</Label>
-                  <Textarea
-                    rows={5}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full shadow-gold" disabled={sending}>
-                  {sending ? "Sending…" : "Send message"}
-                </Button>
-              </div>
-            </form>
+              ) : (
+                <form onSubmit={submit}>
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-display text-xl font-semibold text-foreground">
+                      Send us a message
+                    </h2>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Sparkles className="size-3.5 text-accent" /> Prompt reply
+                    </span>
+                  </div>
+                  <div className="mt-4 space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label className="mb-1.5 block text-sm font-medium">Name *</Label>
+                        <Input
+                          placeholder="Your full name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label className="mb-1.5 block text-sm font-medium">Email *</Label>
+                        <Input
+                          type="email"
+                          placeholder="your.email@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label className="mb-1.5 block text-sm font-medium">Phone (optional)</Label>
+                        <Input
+                          placeholder="+233 XX XXX XXXX"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label className="mb-1.5 block text-sm font-medium">Subject</Label>
+                        <Input
+                          placeholder="Order inquiry, stock question, etc."
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="mb-1.5 block text-sm font-medium">Message *</Label>
+                      <Textarea
+                        rows={5}
+                        placeholder="How can we help you today?"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <Button type="submit" className="w-full shadow-gold gap-2" disabled={sending}>
+                      <Send className="size-4" />
+                      {sending ? "Sending message…" : "Send message"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
           </Reveal>
         </div>
       </section>

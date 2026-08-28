@@ -113,15 +113,32 @@ export interface ContactMessage {
   phone?: string | null;
   subject?: string | null;
   message: string;
+  status: 'unread' | 'read' | 'in_progress' | 'replied' | 'archived';
   read: boolean;
-  created_at: string;
+  adminNotes?: string | null;
+  adminReply?: string | null;
+  repliedAt?: string | null;
+  customerId?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface MessagesResponse {
+  data: ContactMessage[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    unreadCount: number;
+  };
 }
 
 export function useAdminStats() {
   return useQuery({
     queryKey: ["admin", "stats"],
     queryFn: async () => {
-      const [orders, customersRes, productsRes] = await Promise.all([
+      const [orders, customersRes, productsRes, inboxRes] = await Promise.all([
         api.get<ApiOrder[]>("storefront/orders").catch(() => [] as ApiOrder[]),
         api
           .get<PaginatedResponse<{ id: string }>>("customers?limit=1&page=1")
@@ -129,6 +146,9 @@ export function useAdminStats() {
         api
           .get<PaginatedResponse<{ id: string }>>("inventory/products?limit=1&page=1")
           .catch(() => ({ data: [], meta: { total: 0 } }) as PaginatedResponse<{ id: string }>),
+        api
+          .get<MessagesResponse>("storefront/admin/inbox?limit=1&page=1")
+          .catch(() => ({ data: [], meta: { total: 0, unreadCount: 0 } }) as unknown as MessagesResponse),
       ]);
 
       const paid = orders.filter((o) => o.paymentStatus === "paid");
@@ -140,8 +160,8 @@ export function useAdminStats() {
         revenue,
         products: productsRes.meta.total,
         customers: customersRes.meta.total,
-        messages: 0,
-        unread: 0,
+        messages: inboxRes.meta?.total ?? 0,
+        unread: inboxRes.meta?.unreadCount ?? 0,
       };
     },
   });
@@ -181,10 +201,21 @@ export function useAdminCustomers() {
   });
 }
 
-export function useAdminMessages() {
-  return useQuery<ContactMessage[]>({
-    queryKey: ["admin", "messages"],
-    queryFn: async () => [],
+export function useAdminMessages(params?: { status?: string; search?: string; page?: number; limit?: number }) {
+  const queryParams = new URLSearchParams();
+  if (params?.status && params.status !== "all") queryParams.set("status", params.status);
+  if (params?.search?.trim()) queryParams.set("search", params.search.trim());
+  if (params?.page) queryParams.set("page", params.page.toString());
+  if (params?.limit) queryParams.set("limit", params.limit.toString());
+
+  const qs = queryParams.toString();
+  const endpoint = `storefront/admin/inbox${qs ? `?${qs}` : ""}`;
+
+  return useQuery<MessagesResponse>({
+    queryKey: ["admin", "messages", params?.status, params?.search, params?.page],
+    queryFn: async () => {
+      return api.get<MessagesResponse>(endpoint);
+    },
   });
 }
 

@@ -19,8 +19,8 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
             Everything your routine needs
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Three curated collections, each crafted with the same care — from
-            daily essentials to targeted support and clean beauty.
+            Explore our curated wellness collections, each crafted with the highest standards — from
+            daily vitamins and immune support to targeted therapeutics and clean beauty.
           </p>
         </Reveal>
 
@@ -32,13 +32,17 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
                 className="group relative block overflow-hidden rounded-lg border border-border bg-card shadow-soft transition-all duration-300 hover:shadow-elegant"
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    crossOrigin="anonymous"
-                    loading="lazy"
-                    className="size-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
+                  {cat.image ? (
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      crossOrigin="anonymous"
+                      loading="lazy"
+                      className="size-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="size-full bg-secondary/50" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/20 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-5">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">

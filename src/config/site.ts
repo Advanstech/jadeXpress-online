@@ -36,9 +36,10 @@ export const SITE = {
 
 export const NAV_LINKS = [
   { label: "Shop All", to: "/shop" },
-  { label: "Vitamins", to: "/category/vitamins" },
-  { label: "Supplements", to: "/category/supplements" },
-  { label: "Cosmetics", to: "/category/cosmetics" },
+  { label: "Vitamins", to: "/category/vitamins-minerals" },
+  { label: "Supplements", to: "/category/supplements-wellness" },
+  { label: "Beauty & Skin", to: "/category/beauty-skin" },
+  { label: "Skincare", to: "/category/skincare-lotions" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];

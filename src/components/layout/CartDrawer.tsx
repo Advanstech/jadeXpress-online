@@ -6,7 +6,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -160,29 +159,65 @@ export function CartDrawer() {
               ))}
             </div>
 
-            <SheetFooter className="border-t border-border px-5 py-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Subtotal</span>
-                <span className="font-display text-lg font-semibold text-foreground">
-                  {formatGHS(subtotal)}
-                </span>
+            {/* Bottom Checkout & Summary Footer */}
+            <div className="mt-auto border-t border-border bg-card/98 backdrop-blur-md px-5 py-4 sm:px-6 sm:py-5 shadow-xl">
+              {/* Pricing breakdown */}
+              <div className="space-y-2 pb-3">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Subtotal</span>
+                  <span className="font-display text-xl font-bold text-foreground">
+                    {formatGHS(subtotal)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Truck className="size-3.5 text-accent" /> Delivery
+                  </span>
+                  <span className={unlocked ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}>
+                    {unlocked ? "Free Delivery Unlocked" : "Calculated at checkout"}
+                  </span>
+                </div>
               </div>
-              <p className="mb-3 text-xs text-muted-foreground">
-                Delivery calculated at checkout.
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <SheetClose asChild>
+                  <Button
+                    asChild
+                    size="lg"
+                    className="w-full shadow-gold h-12 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-between px-5"
+                  >
+                    <Link to="/checkout">
+                      <span className="flex items-center gap-2">
+                        Checkout
+                      </span>
+                      <span className="flex items-center gap-1.5 font-bold tabular-nums">
+                        {formatGHS(subtotal)}
+                      </span>
+                    </Link>
+                  </Button>
+                </SheetClose>
+
+                <SheetClose asChild>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="default"
+                    className="w-full h-10 text-xs font-medium border-border hover:bg-secondary text-foreground"
+                  >
+                    <Link to="/shop">
+                      Continue shopping
+                    </Link>
+                  </Button>
+                </SheetClose>
+              </div>
+
+              {/* Trust Badge */}
+              <p className="mt-3 text-center text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                Secure Checkout • MoMo & Card Payments
               </p>
-              <div className="grid grid-cols-1 gap-2">
-                <SheetClose asChild>
-                  <Button asChild size="lg" className="shadow-gold">
-                    <Link to="/checkout">Checkout</Link>
-                  </Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button asChild variant="outline" size="lg">
-                    <Link to="/shop">Continue shopping</Link>
-                  </Button>
-                </SheetClose>
-              </div>
-            </SheetFooter>
+            </div>
           </>
         )}
       </SheetContent>

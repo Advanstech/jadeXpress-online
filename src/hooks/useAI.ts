@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export interface ProductInsights {
   who_for: string;
@@ -32,30 +33,27 @@ export interface QuizAnswers {
   avoid?: string[];
 }
 
-/** Placeholder until the storefront AI endpoint is public. */
 export function useProductInsights(productId: string | undefined) {
   return useQuery<ProductInsights>({
     queryKey: ["product-insights", productId],
     enabled: !!productId,
-    queryFn: async () => ({
-      who_for: "",
-      best_time: "",
-      pairs_with: "",
-      tip: "",
-    }),
-    staleTime: 1000 * 60 * 30,
+    queryFn: async () => {
+      if (!productId) {
+        return { who_for: "", best_time: "", pairs_with: "", tip: "" };
+      }
+      return api.get<ProductInsights>(`storefront/ai/product-insights/${productId}`);
+    },
+    staleTime: 1000 * 60 * 30, // 30 mins
   });
 }
 
-/** Placeholder until the AI order explanation endpoint is public. */
 export async function explainOrder(
-  _orderNumber: string,
-  _email: string,
+  orderNumber: string,
+  email?: string,
 ): Promise<OrderExplanation> {
-  return { summary: "", next_steps: [] };
+  return api.post<OrderExplanation>("storefront/ai/explain-order", { orderNumber, email });
 }
 
-/** Placeholder until the quiz recommendation endpoint is public. */
-export async function recommendByQuiz(_answers: QuizAnswers): Promise<QuizResult> {
-  return { summary: "", recommendations: [] };
+export async function recommendByQuiz(answers: QuizAnswers): Promise<QuizResult> {
+  return api.post<QuizResult>("storefront/ai/quiz-recommendations", answers);
 }

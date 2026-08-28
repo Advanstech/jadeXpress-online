@@ -10,7 +10,7 @@ export default tseslint.config(
   // noise (e.g. no-explicit-any in newly added shadcn components) and feeds
   // an AI "fix" loop against code that shouldn't change — every retry
   // billed. Ignore it wholesale; the user's own code stays fully linted.
-  { ignores: ["dist", "src/components/ui/**", "supabase/**"] },
+  { ignores: ["dist", "src/components/ui/**", "supabase/**", ".next/**"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -24,10 +24,7 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      "react-refresh/only-export-components": "off",
       "@typescript-eslint/no-unused-vars": "off",
     },
   }

@@ -146,7 +146,11 @@ export default function ProductDetail() {
         </nav>
 
         <div className="grid gap-10 lg:grid-cols-2">
-          <ProductGallery images={product.images} name={product.name} />
+          <ProductGallery
+            images={product.images}
+            name={product.name}
+            categoryName={category?.name || product.categorySlug}
+          />
 
           <div className="flex flex-col gap-5">
             <div>

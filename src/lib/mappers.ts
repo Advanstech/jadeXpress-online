@@ -12,6 +12,10 @@ export interface ApiProduct {
   categoryId?: string | null;
   categoryName?: string | null;
   categorySlug?: string | null;
+  dosageForm?: string | null;
+  strength?: string | null;
+  packSize?: number | null;
+  unit?: string | null;
   type?: string | null;
   status: string;
   sellingPricePesewas: number;
@@ -37,11 +41,21 @@ export function mapApiProduct(p: ApiProduct): Product {
         ? [p.imageUrl]
         : [];
 
+  const rawDescription = p.description || p.genericName || "";
+  const shortDescription =
+    p.shortDescription ||
+    (rawDescription.length > 120 ? `${rawDescription.slice(0, 117)}…` : rawDescription);
+
   return {
     id: p.id,
     slug: p.slug ?? "",
     name: p.name,
     brand: p.brand ?? "",
+    genericName: p.genericName ?? undefined,
+    dosageForm: p.dosageForm ?? undefined,
+    strength: p.strength ?? undefined,
+    packSize: p.packSize ?? undefined,
+    unit: p.unit ?? undefined,
     categoryId: p.categoryId ?? null,
     categorySlug: (p.categorySlug ?? p.categoryName ?? "supplements") as CategorySlug,
     price: p.sellingPricePesewas / 100,
@@ -52,8 +66,8 @@ export function mapApiProduct(p: ApiProduct): Product {
     rating: Number(p.rating ?? 0),
     reviewCount: p.reviewCount ?? 0,
     images,
-    shortDescription: p.shortDescription ?? "",
-    description: p.description ?? "",
+    shortDescription,
+    description: rawDescription,
     ingredients: p.ingredients ?? "",
     usage: p.usageInstructions ?? "",
     benefits: p.benefits ?? [],
@@ -68,6 +82,7 @@ export interface ApiCategory {
   name: string;
   slug: string;
   description?: string | null;
+  tagline?: string | null;
   imageUrl?: string | null;
   sortOrder?: number;
   parentId?: string | null;
@@ -79,9 +94,9 @@ export function mapApiCategory(c: ApiCategory): Category {
     id: c.id,
     slug: c.slug as CategorySlug,
     name: c.name,
-    tagline: "",
+    tagline: c.tagline ?? "",
     description: c.description ?? "",
-    image: c.imageUrl ?? "",
+    image: c.imageUrl || `/categories/${c.slug}.jpg`,
     sortOrder: c.sortOrder ?? 0,
   };
 }
