@@ -33,6 +33,7 @@ export function clearTokens() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(TYPE_KEY);
   localStorage.removeItem(USER_EMAIL_KEY);
 }
 
@@ -44,7 +45,6 @@ export function getUserEmail(): string | null {
 export function setUserEmail(email: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem(USER_EMAIL_KEY, email);
-  localStorage.removeItem(TYPE_KEY);
 }
 
 function base64UrlDecode(input: string) {

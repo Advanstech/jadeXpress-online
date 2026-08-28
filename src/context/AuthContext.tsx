@@ -92,7 +92,7 @@ function savePreferences(userId: string, prefs: Record<string, boolean>) {
 }
 
 function buildFullName(firstName: string, lastName: string | null) {
-  return `${firstName} ${lastName ?? ""}`.trim() || null;
+  return `${firstName ?? ""} ${lastName ?? ""}`.trim() || null;
 }
 
 function splitName(fullName: string) {
