@@ -180,9 +180,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applyCustomer, applyStaff],
   );
 
-  const signInWithPin = useCallback(async (_email: string, _pin: string) => {
-    return { error: "PIN login is not available for customer accounts." };
-  }, []);
+  const signInWithPin = useCallback(async (email: string, pin: string) => {
+    try {
+      const roster = await apiRequest<
+        { id: string; email: string | null; storeId: string }[]
+      >("GET", "staff/roster", undefined, { skipAuth: true });
+      const lowerEmail = email.trim().toLowerCase();
+      const staff = roster.find((s) => s.email?.toLowerCase() === lowerEmail);
+      if (!staff) return { error: "Staff profile not found." };
+
+      const res = await apiRequest<StaffLoginResponse>(
+        "POST",
+        "auth/pin-login",
+        { staffId: staff.id, storeId: staff.storeId, pin },
+        { skipAuth: true },
+      );
+      applyStaff(res, email);
+      return { error: null };
+    } catch (e) {
+      return { error: (e as Error).message ?? "Invalid PIN." };
+    }
+  }, [applyStaff]);
 
   const signUp = useCallback(
     async (name: string, email: string, password: string) => {
