@@ -1,5 +1,5 @@
 import NextLink from "next/link";
-import type { ReactNode } from "react";
+import type { ReactNode, MouseEvent } from "react";
 
 type To = string | { pathname: string; search?: string; hash?: string };
 
@@ -11,7 +11,7 @@ export function Link({
 }: {
   to: To;
   className?: string;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
   children: ReactNode;
 }) {
   return (

@@ -48,10 +48,22 @@ export default function Shop() {
     sort: "featured",
     maxPrice: MAX_PRICE,
   });
+  
+  const [searchInput, setSearchInput] = useState(filters.search ?? "");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: categories } = useCategories();
   const { data: brands } = useBrands();
   
+  // Debounce search input to avoid spamming the API on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (filters.search !== searchInput) {
+        setFilters((prev) => ({ ...prev, search: searchInput }));
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput, filters.search]);
+
   const {
     data,
     isLoading,
@@ -120,10 +132,8 @@ export default function Shop() {
                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search products…"
-                  value={filters.search ?? ""}
-                  onChange={(e) =>
-                    setFilters({ ...filters, search: e.target.value })
-                  }
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-9"
                 />
               </div>

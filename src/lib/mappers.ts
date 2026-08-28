@@ -1,4 +1,5 @@
 import type { Category, CategorySlug, Product } from "@/types";
+import { getProductRatingSummary } from "./reviews";
 
 export interface ApiProduct {
   id: string;
@@ -46,6 +47,14 @@ export function mapApiProduct(p: ApiProduct): Product {
     p.shortDescription ||
     (rawDescription.length > 120 ? `${rawDescription.slice(0, 117)}…` : rawDescription);
 
+  const { rating, reviewCount } = getProductRatingSummary(
+    p.id,
+    Number(p.rating ?? 0),
+    p.reviewCount ?? 0,
+    p.name,
+    p.categorySlug || p.categoryName || "",
+  );
+
   return {
     id: p.id,
     slug: p.slug ?? "",
@@ -63,8 +72,8 @@ export function mapApiProduct(p: ApiProduct): Product {
       p.compareAtPricePesewas != null ? p.compareAtPricePesewas / 100 : null,
     sku: p.sku,
     stock: p.quantity ?? p.stockLevel ?? 0,
-    rating: Number(p.rating ?? 0),
-    reviewCount: p.reviewCount ?? 0,
+    rating,
+    reviewCount,
     images,
     shortDescription,
     description: rawDescription,

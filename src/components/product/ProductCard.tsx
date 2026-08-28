@@ -1,6 +1,9 @@
 "use client";
+
+import { useState } from "react";
 import { Link } from "@/components/Link";
-import { Heart, ShoppingBag, PackageOpen } from "lucide-react";
+import { Heart, ShoppingBag, PackageOpen, ChevronDown, Sparkles, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -60,6 +63,7 @@ function StockBadge({ qty }: { qty: number }) {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const [showDetails, setShowDetails] = useState(false);
   const { addItem } = useCart();
   const { isWishlisted, toggle } = useWishlist();
   const { user } = useAuth();
@@ -67,6 +71,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const image = product.images?.[0] || "";
   const productHref = product.slug ? `/product/${product.slug}` : `/product/${product.id}`;
   const theme = getIntelligentTheme(product.categorySlug, product.name);
+
+  const detailText = product.shortDescription || product.description;
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-elegant">
@@ -145,20 +151,91 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Product Title */}
         <Link
           to={productHref}
-          className="line-clamp-2 font-display text-[15px] font-semibold leading-snug text-foreground transition-colors hover:text-primary sm:text-base"
+          className="line-clamp-2 font-display text-[14.5px] font-semibold leading-snug text-foreground transition-colors hover:text-primary sm:text-base"
         >
           {product.name}
         </Link>
 
-        <StarRating rating={product.rating} count={product.reviewCount} />
+        {/* Rating & Expandable Dropdown Trigger Row */}
+        <div className="flex items-center justify-between gap-1 pt-0.5">
+          <StarRating rating={product.rating} count={product.reviewCount} size={13.5} />
 
-        {/* Short Description */}
-        {product.shortDescription && (
-          <p className="line-clamp-2 break-words text-xs leading-relaxed text-muted-foreground">
-            {product.shortDescription}
-          </p>
-        )}
+          {/* Hide/Open Dropdown Toggle Button right after rate & New */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowDetails((prev) => !prev);
+            }}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border border-border/70 bg-secondary/60 px-2 py-0.5 text-[10.5px] font-medium text-muted-foreground transition-all duration-200 hover:border-primary/40 hover:bg-secondary hover:text-foreground active:scale-95",
+              showDetails && "border-primary/50 bg-primary/10 text-primary font-semibold shadow-2xs"
+            )}
+            aria-expanded={showDetails}
+            aria-label={showDetails ? "Hide description" : "Show description"}
+          >
+            <span>{showDetails ? "Less" : "Details"}</span>
+            <ChevronDown
+              className={cn(
+                "size-3 transition-transform duration-200",
+                showDetails && "rotate-180 text-primary"
+              )}
+            />
+          </button>
+        </div>
 
+        {/* Collapsible Dropdown Area */}
+        <AnimatePresence initial={false}>
+          {showDetails && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="mt-1 flex flex-col gap-2 rounded-xl border border-border/60 bg-secondary/40 p-2.5 text-xs text-muted-foreground backdrop-blur-xs">
+                {detailText ? (
+                  <p className="line-clamp-3 leading-relaxed text-foreground/90">
+                    {detailText}
+                  </p>
+                ) : (
+                  <p className="italic text-muted-foreground/75">
+                    Authentic premium formulation from JadeXpress certified suppliers.
+                  </p>
+                )}
+
+                {/* Quick Spec Pills */}
+                <div className="flex flex-wrap items-center gap-1 pt-0.5 text-[10px]">
+                  {product.strength && (
+                    <span className="rounded-md bg-background/90 px-1.5 py-0.5 font-medium text-foreground/80 border border-border/50">
+                      {product.strength}
+                    </span>
+                  )}
+                  {product.packSize && product.packSize > 1 ? (
+                    <span className="rounded-md bg-background/90 px-1.5 py-0.5 font-medium text-foreground/80 border border-border/50">
+                      {product.packSize} {product.unit || "units"}
+                    </span>
+                  ) : null}
+                  <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
+                    <ShieldCheck className="size-3 text-primary" /> Verified
+                  </span>
+                </div>
+
+                <Link
+                  to={productHref}
+                  className="inline-flex items-center gap-1 pt-0.5 text-[11px] font-semibold text-primary transition-colors hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Sparkles className="size-3 text-accent" /> Full ingredients & reviews →
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bottom Price & Add to Cart Action */}
         <div className="mt-auto flex items-center justify-between pt-2">
           <PriceTag price={product.price} compareAtPrice={product.compareAtPrice} />
           <Button

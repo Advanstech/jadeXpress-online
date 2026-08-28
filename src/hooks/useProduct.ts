@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { mapApiProduct, type ApiProduct } from "@/lib/mappers";
+import { getProductReviews, addProductReview } from "@/lib/reviews";
 import type { Product, Review } from "@/types";
 
 interface PaginatedResponse<T> {
@@ -29,11 +30,34 @@ export function useProduct(slug: string | undefined) {
   });
 }
 
-export function useReviews(productId: string | undefined) {
+export function useReviews(productId: string | undefined, productName = "", categorySlug = "") {
   return useQuery<Review[]>({
     queryKey: ["reviews", productId],
     enabled: !!productId,
-    queryFn: async () => [],
+    queryFn: async () => {
+      if (!productId) return [];
+      return getProductReviews(productId, productName, categorySlug);
+    },
+  });
+}
+
+export function useAddReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      productId,
+      review,
+    }: {
+      productId: string;
+      review: { author: string; rating: number; comment: string };
+    }) => {
+      return addProductReview(productId, review);
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["reviews", variables.productId] });
+      qc.invalidateQueries({ queryKey: ["product"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 }
 
