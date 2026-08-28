@@ -182,17 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithPin = useCallback(async (email: string, pin: string) => {
     try {
-      const roster = await apiRequest<
-        { id: string; email: string | null; storeId: string }[]
-      >("GET", "staff/roster", undefined, { skipAuth: true });
-      const lowerEmail = email.trim().toLowerCase();
-      const staff = roster.find((s) => s.email?.toLowerCase() === lowerEmail);
-      if (!staff) return { error: "Staff profile not found." };
-
       const res = await apiRequest<StaffLoginResponse>(
         "POST",
         "auth/pin-login",
-        { staffId: staff.id, storeId: staff.storeId, pin },
+        { email: email.trim().toLowerCase(), pin },
         { skipAuth: true },
       );
       applyStaff(res, email);
@@ -322,12 +315,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .finally(() => setLoading(false));
 
+    let isRefreshing = false;
+
     const interval = setInterval(() => {
       const s = getTokens();
-      if (!s) return;
-      refreshSession(s.refreshToken, s.type)
+      if (!s || isRefreshing) return;
+      isRefreshing = true;
+      Promise.race([
+        refreshSession(s.refreshToken, s.type),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Refresh timeout')), 10000),
+        ),
+      ])
         .then((res) => {
-          if (s.type === "customer") {
+          if (s.type === 'customer') {
             applyCustomer(res as CustomerLoginResponse);
           } else {
             applyStaff(res as StaffLoginResponse, getUserEmail() ?? "");
@@ -337,6 +338,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           clearTokens();
           setUser(null);
           setProfile(null);
+        })
+        .finally(() => {
+          isRefreshing = false;
         });
     }, 10 * 60 * 1000);
 
