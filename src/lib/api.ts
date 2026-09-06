@@ -2,6 +2,16 @@
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1").replace(/\/$/, "");
 
+if (process.env.NODE_ENV === "production" && API_BASE.includes("localhost")) {
+  console.error(
+    "[CONFIG] NEXT_PUBLIC_API_URL is not set — the shop will fail to reach the API in production.",
+  );
+}
+
+// No request may hang the shop forever — matches the API's own 30s request timeout
+const DEFAULT_TIMEOUT_MS = 30_000;
+const AI_TIMEOUT_MS = 60_000;
+
 const TOKEN_KEY = "jx_access_token";
 const REFRESH_KEY = "jx_refresh_token";
 const TYPE_KEY = "jx_auth_type";
@@ -127,11 +137,21 @@ export async function apiRequest<T>(
     }
   }
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let res: Response;
+  try {
+    const timeoutMs = path.startsWith("ai/") || path.startsWith("/ai/") ? AI_TIMEOUT_MS : DEFAULT_TIMEOUT_MS;
+    res = await fetch(url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (err: any) {
+    if (err?.name === "TimeoutError") {
+      throw new ApiError("Request timed out — please try again.", 0);
+    }
+    throw new ApiError("Network error: Could not connect to the server.", 0);
+  }
 
   if (!res.ok) {
     // If 401 Unauthorized and not already retrying or skipping auth, attempt token refresh
