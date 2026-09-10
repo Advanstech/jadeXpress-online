@@ -1,6 +1,22 @@
 // Shared domain types for the JadeXpress storefront.
 
-export type CategorySlug = "vitamins" | "supplements" | "cosmetics";
+export type CategorySlug =
+  | "vitamins"
+  | "supplements"
+  | "cosmetics"
+  | "beauty-skin"
+  | "childrens-health"
+  | "digestive-health"
+  | "hair-care"
+  | "herbal-botanicals"
+  | "immune-support"
+  | "omega-fish-oils"
+  | "protein-sports"
+  | "skincare-lotions"
+  | "supplements-wellness"
+  | "vitamins-minerals"
+  | "weight-management"
+  | (string & {});
 
 export interface Category {
   id: string;

@@ -18,14 +18,16 @@ import {
   ChevronRight,
   ShieldCheck,
   Building2,
-  Users
+  Users,
+  ArrowRightLeft
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const adminNav = [
   { to: "/admin/overview", label: "Overview", icon: LayoutGrid, end: true },
   { to: "/admin/sales", label: "Sales & Analytics", icon: TrendingUp, end: false },
-  { to: "/admin/inventory", label: "Inventory Mgmt", icon: PackageSearch, end: false },
+  { to: "/admin/inventory", label: "Inventory Mgmt", icon: PackageSearch, end: true },
+  { to: "/admin/inventory/transfers", label: "Stock Transfers", icon: ArrowRightLeft, end: false },
   { to: "/admin/accounting", label: "Accounting", icon: Wallet, end: false },
   { to: "/admin/customers", label: "Customers", icon: Users, end: false },
   { to: "/admin/messages", label: "Support Inbox", icon: MessageSquare, end: false, badge: "unread" },

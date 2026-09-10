@@ -177,14 +177,40 @@ export function useAdminOrders() {
   });
 }
 
-export function useAdminProducts() {
-  return useQuery<Product[]>({
-    queryKey: ["admin", "products"],
+export interface AdminProductsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  categoryId?: string;
+}
+
+export interface AdminProductsResult {
+  products: Product[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+}
+
+export function useAdminProducts(params?: AdminProductsParams) {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 50;
+  const searchParam = params?.search ? `&search=${encodeURIComponent(params.search)}` : "";
+  const catParam = params?.categoryId && params.categoryId !== "all" ? `&categoryId=${encodeURIComponent(params.categoryId)}` : "";
+
+  return useQuery<AdminProductsResult>({
+    queryKey: ["admin", "products", page, limit, params?.search, params?.categoryId],
     queryFn: async () => {
       const res = await api.get<PaginatedResponse<ApiProduct>>(
-        "inventory/products?limit=100&page=1",
+        `inventory/products?limit=${limit}&page=${page}${searchParam}${catParam}`,
       );
-      return res.data.map(mapApiProduct);
+      return {
+        products: res.data.map(mapApiProduct),
+        total: res.meta?.total ?? res.data.length,
+        totalPages: res.meta?.totalPages ?? 1,
+        page,
+        limit,
+      };
     },
   });
 }
