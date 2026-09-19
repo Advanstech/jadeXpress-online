@@ -1,5 +1,6 @@
 "use client";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -107,10 +108,23 @@ export function ProductFiltersContent({
         </div>
       </div>
 
+      <Separator />
+
+      <div className="flex items-center gap-3">
+        <Checkbox
+          id="in-stock"
+          checked={filters.inStock === true}
+          onCheckedChange={(v) => set({ inStock: v === true ? true : undefined })}
+        />
+        <label htmlFor="in-stock" className="cursor-pointer text-sm font-medium text-foreground">
+          In stock only
+        </label>
+      </div>
+
       <Button
         variant="outline"
         className="w-full"
-        onClick={() => onChange({ category: "", brand: "", maxPrice: maxPriceBound })}
+        onClick={() => onChange({ category: "", brand: "", maxPrice: maxPriceBound, inStock: undefined })}
       >
         Clear filters
       </Button>

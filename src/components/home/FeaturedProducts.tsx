@@ -10,7 +10,12 @@ import { motion } from "framer-motion";
 
 export function FeaturedProducts() {
   const { data: products, isLoading } = useProducts();
+  // Curated picks first; fall back to in-stock products so the section never
+  // renders empty before merchandising flags are set.
   const featured = (products ?? []).filter((p) => p.isFeatured).slice(0, 8);
+  const display = featured.length > 0
+    ? featured
+    : (products ?? []).filter((p) => p.stock > 0).slice(0, 8);
 
   return (
     <section className="bg-secondary/50 py-20 md:py-28">
@@ -47,7 +52,7 @@ export function FeaturedProducts() {
                   <Skeleton className="h-8 w-full" />
                 </div>
               ))
-            : featured.map((p) => (
+            : display.map((p) => (
                 <motion.div key={p.id} variants={staggerItem}>
                   <ProductCard product={p} />
                 </motion.div>

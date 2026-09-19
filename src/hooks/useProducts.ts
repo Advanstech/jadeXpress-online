@@ -18,6 +18,7 @@ export interface ProductFilters {
   brand?: string;
   search?: string;
   maxPrice?: number;
+  inStock?: boolean;
   sort?: ProductSort;
 }
 
@@ -42,6 +43,7 @@ function buildQuery(filters: ProductFilters, page = 1, limit = 20) {
   if (typeof filters.maxPrice === "number") {
     p.set("maxPrice", Math.round(filters.maxPrice * 100).toString());
   }
+  if (filters.inStock) p.set("inStock", "true");
   if (filters.sort) p.set("sort", filters.sort);
   return `?${p.toString()}`;
 }
