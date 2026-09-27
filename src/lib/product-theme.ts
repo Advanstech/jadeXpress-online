@@ -20,6 +20,14 @@ export function getIntelligentTheme(
       accent: "#b45309",
       tagBg: "rgba(234, 179, 8, 0.16)",
     };
+  } else if (name.includes("sulfur") || name.includes("sulfur8")) {
+    return {
+      glowColor: "rgba(234, 179, 8, 0.35)",
+      gradient:
+        "radial-gradient(circle at 50% 40%, rgba(250, 204, 21, 0.45) 0%, rgba(220, 38, 38, 0.18) 55%, transparent 75%)",
+      accent: "#eab308",
+      tagBg: "rgba(250, 204, 21, 0.16)",
+    };
   } else if (name.includes("womenli")) {
     return {
       glowColor: "rgba(34, 197, 94, 0.28)",
