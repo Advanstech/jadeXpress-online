@@ -46,10 +46,10 @@ type PaymentMethod =
 
 const paymentMethods: { value: PaymentMethod; label: string; icon: typeof Smartphone }[] = [
   { value: "mtn_momo", label: "MTN MoMo", icon: Smartphone },
-  { value: "vodafone_cash", label: "Vodafone Cash", icon: Smartphone },
-  { value: "airteltigo", label: "AirtelTigo", icon: Smartphone },
+  { value: "vodafone_cash", label: "Telecel Cash", icon: Smartphone },
+  { value: "airteltigo", label: "AT Money", icon: Smartphone },
   { value: "card", label: "Debit / Credit card", icon: CreditCard },
-  { value: "gtbank", label: "GT Bank", icon: Landmark },
+  { value: "gtbank", label: "Bank Transfer", icon: Landmark },
 ];
 
 interface FormState {
@@ -89,11 +89,6 @@ export default function Checkout() {
   // Payment
   const [method, setMethod] = useState<PaymentMethod>("mtn_momo");
   const [momoPhone, setMomoPhone] = useState("");
-  const [momoPin, setMomoPin] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [gtAccount, setGtAccount] = useState("");
 
   const defaultAddr = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
 
@@ -170,20 +165,10 @@ export default function Checkout() {
       return false;
     }
     if (method === "mtn_momo" || method === "vodafone_cash" || method === "airteltigo") {
-      if (!momoPhone.trim() || momoPin.length !== 4) {
-        toast.error("Enter the mobile money phone and 4-digit PIN.");
+      if (!momoPhone.trim()) {
+        toast.error("Enter the mobile money phone number.");
         return false;
       }
-    }
-    if (method === "card") {
-      if (cardNumber.replace(/\s/g, "").length < 12 || !cardExpiry || cardCvv.length < 3) {
-        toast.error("Please enter complete card details.");
-        return false;
-      }
-    }
-    if (method === "gtbank" && !gtAccount.trim()) {
-      toast.error("Enter your GT Bank account or email.");
-      return false;
     }
     return true;
   };
@@ -238,8 +223,13 @@ export default function Checkout() {
         }
       }
 
-      const paymentGateway =
-        method === "card" || method === "gtbank" ? "paystack" : "momo";
+      const isStanbic =
+        PAYMENT_MODE === "stanbic" ||
+        PAYMENT_MODE === "mock-stanbic" ||
+        PAYMENT_MODE === "live-advansis" ||
+        PAYMENT_MODE === "mock-advansis";
+
+      const paymentGateway = isStanbic ? "stanbic" : method === "card" || method === "gtbank" ? "paystack" : "momo";
 
       const payload = {
         email: shippingAddress.email,
@@ -264,6 +254,48 @@ export default function Checkout() {
         JSON.stringify({ orderNumber, email: shippingAddress.email, orderId: id }),
       );
 
+      if (paymentGateway === "stanbic") {
+        setProcessing(true);
+        const channel = method === "card" ? "card" : "momo";
+        const network =
+          method === "mtn_momo"
+            ? "mtn"
+            : method === "vodafone_cash"
+            ? "telecel"
+            : "at";
+
+        const res = await api.post<{
+          reference: string;
+          status: string;
+          authorizationUrl?: string;
+          message?: string;
+        }>("payments/stanbic/initialize", {
+          orderId: id,
+          orderNumber,
+          email: shippingAddress.email,
+          amount: Math.round(total * 100),
+          channel,
+          network: channel === "momo" ? network : undefined,
+          phone: channel === "momo" ? momoPhone : undefined,
+          callbackUrl: `${window.location.origin}/checkout/success/${orderNumber}`,
+          metadata: { orderId: id, orderNumber, method },
+        });
+
+        if (res.authorizationUrl) {
+          window.location.href = res.authorizationUrl;
+          return;
+        }
+
+        // For MoMo: USSD Prompt sent directly to customer handset per BoG guidelines
+        toast.success(
+          res.message ||
+            "Payment prompt sent to your phone! Please enter your PIN on your mobile device.",
+        );
+        clearCart();
+        navigate(`/checkout/success/${orderNumber}?ref=${res.reference}`);
+        return;
+      }
+
       if (paymentGateway === "paystack") {
         setProcessing(true);
         const { authorization_url, reference } = await api.post<{
@@ -282,9 +314,9 @@ export default function Checkout() {
         }
       }
 
-      // Demo / MoMo path — simulate the payment handshake.
+      // Demo fallback
       setProcessing(true);
-      await new Promise((r) => setTimeout(r, 1800));
+      await new Promise((r) => setTimeout(r, 1500));
       clearCart();
       navigate(`/checkout/success/${orderNumber}`);
     } catch {
@@ -511,7 +543,7 @@ export default function Checkout() {
                     {(method === "mtn_momo" ||
                       method === "vodafone_cash" ||
                       method === "airteltigo") && (
-                      <>
+                      <div className="space-y-3">
                         <Field label="Mobile money number" required>
                           <Input
                             value={momoPhone}
@@ -519,64 +551,41 @@ export default function Checkout() {
                             placeholder="e.g. 024 000 0000"
                           />
                         </Field>
-                        <Field label="4-digit PIN (demo)" required>
-                          <Input
-                            type="password"
-                            inputMode="numeric"
-                            maxLength={4}
-                            value={momoPin}
-                            onChange={(e) =>
-                              setMomoPin(e.target.value.replace(/\D/g, "").slice(0, 4))
-                            }
-                            placeholder="••••"
-                          />
-                        </Field>
-                      </>
+                        <div className="rounded-md border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
+                          <p className="flex items-center gap-1.5 font-medium text-foreground">
+                            <Smartphone className="size-3.5 text-accent" />
+                            Direct Handset Authorization (Bank & Telco Secure)
+                          </p>
+                          <p className="mt-1">
+                            An authorization prompt will be sent directly to your phone.
+                            Enter your PIN on your mobile device to approve payment.
+                            JadeXpress will never ask for your MoMo PIN on the website.
+                          </p>
+                        </div>
+                      </div>
                     )}
                     {method === "card" && (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <Field label="Card number (demo)" required className="sm:col-span-2">
-                          <Input
-                            inputMode="numeric"
-                            value={cardNumber}
-                            onChange={(e) =>
-                              setCardNumber(
-                                e.target.value
-                                  .replace(/\D/g, "")
-                                  .slice(0, 16)
-                                  .replace(/(\d{4})(?=\d)/g, "$1 "),
-                              )
-                            }
-                            placeholder="4242 4242 4242 4242"
-                          />
-                        </Field>
-                        <Field label="Expiry" required>
-                          <Input
-                            value={cardExpiry}
-                            onChange={(e) => setCardExpiry(e.target.value)}
-                            placeholder="MM/YY"
-                          />
-                        </Field>
-                        <Field label="CVV" required>
-                          <Input
-                            type="password"
-                            inputMode="numeric"
-                            maxLength={4}
-                            value={cardCvv}
-                            onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                            placeholder="•••"
-                          />
-                        </Field>
+                      <div className="rounded-md border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
+                        <p className="flex items-center gap-1.5 font-medium text-foreground">
+                          <CreditCard className="size-3.5 text-accent" />
+                          Stanbic Bank 3D Secure Card Gateway
+                        </p>
+                        <p className="mt-1">
+                          You will be redirected to the Stanbic Bank 3D Secure verification page (Visa & Mastercard) to authenticate your card.
+                          Card numbers are processed exclusively on the bank’s PCI-DSS compliant infrastructure.
+                        </p>
                       </div>
                     )}
                     {method === "gtbank" && (
-                      <Field label="GT Bank account / email (demo)" required>
-                        <Input
-                          value={gtAccount}
-                          onChange={(e) => setGtAccount(e.target.value)}
-                          placeholder="Account number or email"
-                        />
-                      </Field>
+                      <div className="rounded-md border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
+                        <p className="flex items-center gap-1.5 font-medium text-foreground">
+                          <Landmark className="size-3.5 text-accent" />
+                          Direct Bank Transfer
+                        </p>
+                        <p className="mt-1">
+                          Account transfer instructions and verification reference will be provided on the order confirmation page.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>

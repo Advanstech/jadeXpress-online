@@ -83,13 +83,15 @@ export const POS_API_BASE = "https://jadexpress-api-production.up.railway.app";
 export const COURIER_MODE: "mock" | "live" = "mock";
 
 /**
- * Payment gateway. We integrate with Advansis Technologies (GT Bank payment
- * API) for Mobile Money, debit and credit cards. `mock` simulates the whole
- * gateway flow; flip to `live` once Advansis hands over production
- * credentials. Kept alongside Paystack for reference.
+ * Payment gateway. We integrate with Stanbic Bank Ghana (Advansis Gateway)
+ * for Mobile Money (MTN, Telecel, AT) and Debit/Credit Card (Visa & Mastercard) collection.
  */
-export const PAYMENT_MODE: "mock-advansis" | "live-advansis" | "paystack" =
-  "mock-advansis";
+export const PAYMENT_MODE:
+  | "stanbic"
+  | "mock-stanbic"
+  | "mock-advansis"
+  | "live-advansis"
+  | "paystack" = "stanbic";
 
 /** Admin roles, strongest → weakest. */
 export const ADMIN_ROLES = ["owner", "super_admin", "admin", "manager", "supervisor", "stock_officer"] as const;
