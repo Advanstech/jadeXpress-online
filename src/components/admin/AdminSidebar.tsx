@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { NavLink } from "@/components/NavLink";
 import { useAdminStats } from "@/hooks/useAdmin";
 import { useAdmin } from "@/context/AuthContext";
@@ -38,6 +39,7 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { data: stats } = useAdminStats();
   const { role } = useAdmin();
+  const pathname = usePathname() ?? "";
 
   const toggleCollapse = () => setCollapsed((prev) => !prev);
 
@@ -109,21 +111,21 @@ export function AdminSidebar() {
           <nav className="flex flex-col gap-1.5">
             {adminNav.map((item) => {
               const badgeCount = item.badge === "unread" ? (stats?.unread ?? 0) : 0;
+              const target = item.to as string;
+              const isActive = item.end ? pathname === target : pathname.startsWith(target);
               
               const NavContent = (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   end={item.end}
-                  className={({ isActive }) =>
-                    cn(
-                      "group relative flex items-center rounded-xl transition-all duration-200",
-                      collapsed ? "justify-center p-3" : "px-4 py-3 justify-between",
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow-gold"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    )
-                  }
+                  className={cn(
+                    "group relative flex items-center rounded-xl transition-all duration-200",
+                    collapsed ? "justify-center p-3" : "px-4 py-3 justify-between",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-gold"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className={cn("size-5 shrink-0 transition-transform group-hover:scale-110")} />

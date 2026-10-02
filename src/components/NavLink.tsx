@@ -2,29 +2,29 @@
 
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { forwardRef, type ReactNode } from "react";
 
 type To = string | { pathname: string; search?: string; hash?: string };
 
-export function NavLink({
-  to,
-  end = false,
-  className,
-  children,
-}: {
-  to: To;
-  end?: boolean;
-  className?: string | (({ isActive }: { isActive: boolean }) => string);
-  children: ReactNode;
-}) {
+export const NavLink = forwardRef<
+  HTMLAnchorElement,
+  {
+    to: To;
+    end?: boolean;
+    className?: string | (({ isActive }: { isActive: boolean }) => string);
+    children: ReactNode;
+  } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "className">
+>(({ to, end = false, className, children, ...props }, ref) => {
   const pathname = usePathname() ?? "";
   const target = typeof to === "string" ? to : to.pathname;
   const isActive = end ? pathname === target : pathname.startsWith(target);
   const computed = typeof className === "function" ? className({ isActive }) : className;
 
   return (
-    <NextLink href={to as never} className={computed}>
+    <NextLink ref={ref} href={to as never} className={computed} {...props}>
       {children}
     </NextLink>
   );
-}
+});
+
+NavLink.displayName = "NavLink";

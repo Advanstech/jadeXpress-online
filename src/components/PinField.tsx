@@ -1,4 +1,4 @@
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Input } from "@/components/ui/input";
 
 interface PinFieldProps {
   value: string;
@@ -8,19 +8,18 @@ interface PinFieldProps {
 
 export function PinField({ value, onChange, autoFocus }: PinFieldProps) {
   return (
-    <InputOTP
+    <Input
+      type="password"
+      inputMode="numeric"
       maxLength={6}
       value={value}
-      onChange={onChange}
-      inputMode="numeric"
-      pattern="^[0-9]+$"
+      onChange={(e) => {
+        const val = e.target.value.replace(/[^0-9]/g, "");
+        onChange(val);
+      }}
       autoFocus={autoFocus}
-    >
-      <InputOTPGroup>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <InputOTPSlot key={i} index={i} />
-        ))}
-      </InputOTPGroup>
-    </InputOTP>
+      placeholder="••••"
+      className="font-mono text-lg tracking-widest"
+    />
   );
 }

@@ -105,8 +105,8 @@ export default function Profile() {
 
   const savePin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPin.length !== 6) {
-      toast.error("PIN must be 6 digits.");
+    if (newPin.length !== 4 && newPin.length !== 6) {
+      toast.error("PIN must be 4 or 6 digits.");
       return;
     }
     if (newPin !== confirmPin) {
@@ -254,7 +254,7 @@ export default function Profile() {
               <Lock className="size-5" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-foreground">6-digit login PIN</p>
+              <p className="text-sm font-semibold text-foreground">Login PIN</p>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {profile?.has_pin
                   ? "You can sign in with your PIN instead of your password."

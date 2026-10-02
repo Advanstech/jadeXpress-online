@@ -18,7 +18,6 @@ export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [pinEmail, setPinEmail] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -39,16 +38,16 @@ export default function Login() {
 
   const submitPin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pinEmail.trim()) {
+    if (!email.trim()) {
       toast.error("Enter your email.");
       return;
     }
-    if (pin.length !== 6) {
-      toast.error("Enter your 6-digit PIN.");
+    if (pin.length !== 4 && pin.length !== 6) {
+      toast.error("Enter your 4 or 6-digit PIN.");
       return;
     }
     setLoading(true);
-    const { error } = await signInWithPin(pinEmail.trim(), pin);
+    const { error } = await signInWithPin(email.trim(), pin);
     setLoading(false);
     if (error) {
       toast.error(error);
@@ -75,7 +74,7 @@ export default function Login() {
       <Tabs defaultValue="password" className="w-full">
         <TabsList className="mb-5 grid w-full grid-cols-2 bg-secondary">
           <TabsTrigger value="password">Password</TabsTrigger>
-          <TabsTrigger value="pin">6-digit PIN</TabsTrigger>
+          <TabsTrigger value="pin">PIN</TabsTrigger>
         </TabsList>
 
         <TabsContent value="password">
@@ -121,13 +120,13 @@ export default function Login() {
               <Input
                 type="email"
                 required
-                value={pinEmail}
-                onChange={(e) => setPinEmail(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
               />
             </div>
             <div>
-              <Label className="mb-2 block text-sm font-medium">6-digit PIN</Label>
+              <Label className="mb-2 block text-sm font-medium">PIN</Label>
               <PinField value={pin} onChange={setPin} />
             </div>
             <Button type="submit" className="w-full shadow-gold" disabled={loading}>
