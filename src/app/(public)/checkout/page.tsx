@@ -66,7 +66,7 @@ interface FormState {
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { data: addresses } = useAddresses();
   const { insert: saveAddressRow } = useAddressMutations();
 
@@ -93,14 +93,16 @@ export default function Checkout() {
   const defaultAddr = addresses?.find((a) => a.isDefault) ?? addresses?.[0];
 
   useEffect(() => {
-    if (user) {
+    if (user || profile) {
       setForm((f) => ({
         ...f,
-        email: f.email || user.email || "",
-        recipientName: f.recipientName || "",
+        email: f.email || user?.email || "",
+        recipientName: f.recipientName || profile?.full_name || "",
+        phone: f.phone || profile?.phone || "",
       }));
+      setMomoPhone((prev) => prev || profile?.phone || "");
     }
-  }, [user]);
+  }, [user, profile]);
 
   useEffect(() => {
     if (defaultAddr) {
