@@ -49,35 +49,32 @@ export function AdminSidebar() {
         className="sticky top-0 h-screen flex flex-col bg-card border-r border-border shadow-soft z-40 transition-all duration-300 ease-in-out"
       >
         {/* Header Section */}
-        <div className="flex h-20 shrink-0 items-center justify-between px-4 border-b border-border/50">
-          <AnimatePresence mode="popLayout">
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex items-center gap-3 overflow-hidden"
-              >
-                <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-gold">
-                  <Building2 className="size-5" />
-                </div>
-                <div className="flex flex-col">
+        <div className="flex h-20 shrink-0 items-center px-4 border-b border-border/50 relative">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className={cn("grid shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-gold transition-all duration-300", collapsed ? "size-10 mx-auto" : "size-10")}>
+              <Building2 className="size-5" />
+            </div>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="flex flex-col whitespace-nowrap"
+                >
                   <span className="font-display font-bold text-foreground text-lg leading-tight truncate">JadeXpress</span>
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Enterprise Admin</span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-          {/* Toggle Button */}
+          {/* Toggle Button absolute positioned on edge */}
           <button
             onClick={toggleCollapse}
-            className={cn(
-              "grid size-8 place-items-center rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors",
-              collapsed && "mx-auto"
-            )}
+            className="absolute -right-3.5 top-6 grid size-7 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:text-foreground hover:bg-secondary z-50 transition-colors"
           >
-            {collapsed ? <ChevronRight className="size-5" /> : <ChevronLeft className="size-5" />}
+            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
           </button>
         </div>
 

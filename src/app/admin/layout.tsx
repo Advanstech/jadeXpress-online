@@ -60,7 +60,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <AdminSidebar />
       
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar relative">
+      <main className="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth">
         {/* Subtle background glow effect */}
         <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
         
