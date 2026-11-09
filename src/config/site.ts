@@ -91,7 +91,8 @@ export const PAYMENT_MODE:
   | "mock-stanbic"
   | "mock-advansis"
   | "live-advansis"
-  | "paystack" = "stanbic";
+  | "paystack"
+  | "ngenius" = "ngenius";
 
 /** Admin roles, strongest → weakest. */
 export const ADMIN_ROLES = ["owner", "super_admin", "admin", "manager", "supervisor", "stock_officer"] as const;

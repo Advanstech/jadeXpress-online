@@ -32,7 +32,23 @@ export default function CheckoutSuccess() {
         const o = await trackOrder(parsed.orderNumber, mail);
         setOrder(o);
         const ref = searchParams?.get("reference") || searchParams?.get("trxref");
-        if (ref && o?.id) {
+        const gw = searchParams?.get("gw");
+        if (gw === "ngenius" && o?.id && o.paymentReference) {
+          // N-Genius hosted page returns here — confirm server-side via the
+          // reporting API (never trust the redirect alone).
+          try {
+            await api.put(`storefront/orders/${o.id}/pay`, {
+              reference: o.paymentReference,
+              gateway: "ngenius",
+              method: "card",
+            });
+            const updated = await trackOrder(parsed.orderNumber, mail);
+            setOrder(updated);
+          } catch {
+            // Payment may still be settling — leave order as-is; tracking page
+            // will show the latest state and staff can reconcile manually.
+          }
+        } else if (ref && o?.id) {
           await api.put(`storefront/orders/${o.id}/pay`, {
             reference: ref,
             gateway: "paystack",

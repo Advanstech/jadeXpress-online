@@ -22,6 +22,7 @@ export interface TrackedOrder {
   email: string;
   status: string;
   paymentStatus: string;
+  paymentReference: string | null;
   subtotal: number;
   shippingFee: number;
   total: number;
@@ -45,6 +46,7 @@ interface ApiOrder {
   email: string;
   status: string;
   paymentStatus: string;
+  paymentReference: string | null;
   subtotalPesewas: number;
   shippingFeePesewas: number;
   totalPesewas: number;
@@ -70,6 +72,7 @@ export async function trackOrder(
       email: o.email,
       status: o.status,
       paymentStatus: o.paymentStatus,
+      paymentReference: o.paymentReference ?? null,
       subtotal: o.subtotalPesewas / 100,
       shippingFee: o.shippingFeePesewas / 100,
       total: o.totalPesewas / 100,

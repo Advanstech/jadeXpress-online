@@ -231,7 +231,16 @@ export default function Checkout() {
         PAYMENT_MODE === "live-advansis" ||
         PAYMENT_MODE === "mock-advansis";
 
-      const paymentGateway = isStanbic ? "stanbic" : method === "card" || method === "gtbank" ? "paystack" : "momo";
+      const useNgenius =
+        PAYMENT_MODE === "ngenius" && (method === "card" || method === "gtbank");
+
+      const paymentGateway = useNgenius
+        ? "ngenius"
+        : isStanbic
+        ? "stanbic"
+        : method === "card" || method === "gtbank"
+        ? "paystack"
+        : "momo";
 
       const payload = {
         email: shippingAddress.email,
@@ -255,6 +264,18 @@ export default function Checkout() {
         "jadexpress_last_order",
         JSON.stringify({ orderNumber, email: shippingAddress.email, orderId: id }),
       );
+
+      if (paymentGateway === "ngenius") {
+        setProcessing(true);
+        const { paymentUrl } = await api.post<{ paymentUrl: string }>(
+          `storefront/orders/${id}/pay-link`,
+        );
+        if (paymentUrl) {
+          window.location.href = paymentUrl;
+          return;
+        }
+        throw new Error("Payment link unavailable");
+      }
 
       if (paymentGateway === "stanbic") {
         setProcessing(true);
