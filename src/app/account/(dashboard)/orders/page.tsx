@@ -1,4 +1,5 @@
 "use client";
+import { useMemo, useState } from "react";
 import { Link } from "@/components/Link";
 import { PackageOpen } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
@@ -6,10 +7,40 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatGHS, formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+type PayFilter = "all" | "paid" | "unpaid" | "demo";
+
+const payFilters: { value: PayFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "paid", label: "Paid" },
+  { value: "unpaid", label: "Pending" },
+  { value: "demo", label: "Demo" },
+];
+
+const payBadge: Record<string, string> = {
+  paid: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+  unpaid: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  demo: "bg-muted text-muted-foreground",
+};
 
 export default function Orders() {
   const { data: orders, isLoading } = useOrders();
-  const list = orders ?? [];
+  const [filter, setFilter] = useState<PayFilter>("all");
+  const list = useMemo(() => {
+    const all = orders ?? [];
+    return filter === "all" ? all : all.filter((o) => o.paymentStatus === filter);
+  }, [orders, filter]);
+
+  const counts = useMemo(() => {
+    const all = orders ?? [];
+    return {
+      all: all.length,
+      paid: all.filter((o) => o.paymentStatus === "paid").length,
+      unpaid: all.filter((o) => o.paymentStatus === "unpaid").length,
+      demo: all.filter((o) => o.paymentStatus === "demo").length,
+    };
+  }, [orders]);
 
   return (
     <div className="space-y-6">
@@ -19,6 +50,26 @@ export default function Orders() {
           Your orders
         </h1>
       </div>
+
+      {!isLoading && (orders ?? []).length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {payFilters.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={cn(
+                "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                filter === f.value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40",
+              )}
+            >
+              {f.label}
+              <span className="ml-1.5 text-xs opacity-70">{counts[f.value]}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">
@@ -31,15 +82,19 @@ export default function Orders() {
           <PackageOpen className="size-10 text-muted-foreground" />
           <div>
             <p className="font-display text-lg font-semibold text-foreground">
-              No orders yet
+              {filter === "all" ? "No orders yet" : "No orders in this filter"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              When you place an order, it'll appear here.
+              {filter === "all"
+                ? "When you place an order, it'll appear here."
+                : "Try a different payment status filter."}
             </p>
           </div>
-          <Button asChild className="shadow-gold">
-            <Link to="/shop">Start shopping</Link>
-          </Button>
+          {filter === "all" && (
+            <Button asChild className="shadow-gold">
+              <Link to="/shop">Start shopping</Link>
+            </Button>
+          )}
         </div>
       ) : (
         <ul className="space-y-3">
@@ -69,6 +124,15 @@ export default function Orders() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "capitalize",
+                      payBadge[o.paymentStatus] ?? "",
+                    )}
+                  >
+                    {o.paymentStatus === "unpaid" ? "payment pending" : o.paymentStatus}
+                  </Badge>
                   <Badge variant="outline" className="capitalize">
                     {o.status}
                   </Badge>

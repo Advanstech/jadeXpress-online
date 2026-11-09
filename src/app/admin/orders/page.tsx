@@ -103,6 +103,11 @@ export default function AdminOrders() {
                     <p className="text-xs text-muted-foreground">
                       {o.shippingAddress.recipientName}
                     </p>
+                    {o.shippingAddress.deliveryBranch && (
+                      <p className="text-xs font-medium text-primary">
+                        {o.shippingAddress.deliveryBranch}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-foreground">
                     {o.items.reduce((s, i) => s + i.quantity, 0)}

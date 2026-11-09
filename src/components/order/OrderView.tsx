@@ -29,6 +29,7 @@ interface OrderViewProps {
     city: string;
     street: string;
     digitalAddress?: string | null;
+    deliveryBranch?: string | null;
     courier?: {
       provider?: string;
       service?: string;
@@ -127,7 +128,13 @@ export function OrderView(order: OrderViewProps) {
             {order.shippingAddress.digitalAddress && (
               <p>GhanaPost GPS: {order.shippingAddress.digitalAddress}</p>
             )}
+            {order.shippingAddress.deliveryBranch && (
+              <p className="mt-1 font-medium text-foreground">
+                Dispatching from: {order.shippingAddress.deliveryBranch}
+              </p>
+            )}
           </div>
+          <DeliveryMap order={order} />
           {order.shippingAddress.courier?.provider && (
             <div className="mt-3 rounded-lg border border-border bg-card p-4 text-sm">
               <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
@@ -179,6 +186,31 @@ export function OrderView(order: OrderViewProps) {
           ))}
         </ol>
       </div>
+    </div>
+  );
+}
+
+function DeliveryMap({ order }: { order: OrderViewProps }) {
+  const a = order.shippingAddress;
+  const query = [a.street, a.city, a.region, a.country]
+    .filter(Boolean)
+    .join(", ");
+  if (!query) return null;
+  const src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
+  return (
+    <div className="mt-3 overflow-hidden rounded-lg border border-border">
+      <iframe
+        title={`Delivery location for ${order.orderNumber}`}
+        src={src}
+        className="h-56 w-full"
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        allowFullScreen
+      />
+      <p className="bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+        Approximate delivery area — dispatching from{" "}
+        {a.deliveryBranch ?? "nearest JadeXpress branch"}
+      </p>
     </div>
   );
 }

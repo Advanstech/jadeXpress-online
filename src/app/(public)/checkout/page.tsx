@@ -61,6 +61,16 @@ interface FormState {
   city: string;
   street: string;
   digitalAddress: string;
+  deliveryBranch: string;
+}
+
+interface BranchOption {
+  id: string;
+  code: string;
+  name: string;
+  address: string | null;
+  city: string;
+  phone: string | null;
 }
 
 export default function Checkout() {
@@ -79,7 +89,9 @@ export default function Checkout() {
     city: "",
     street: "",
     digitalAddress: "",
+    deliveryBranch: "",
   });
+  const [branches, setBranches] = useState<BranchOption[]>([]);
   const [placing, setPlacing] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [saveAddress, setSaveAddress] = useState(true);
@@ -131,6 +143,23 @@ export default function Checkout() {
     };
   }, [form.country, subtotal]);
 
+  // Delivery branches — public list of active stores (Dzorwulu, Israel Park…).
+  useEffect(() => {
+    api
+      .get<BranchOption[]>("storefront/branches")
+      .then((list) => {
+        if (Array.isArray(list)) {
+          setBranches(list);
+          setForm((f) =>
+            f.deliveryBranch || list.length === 1
+              ? { ...f, deliveryBranch: f.deliveryBranch || list[0].name }
+              : f,
+          );
+        }
+      })
+      .catch(() => setBranches([]));
+  }, []);
+
   const shipping = quote?.fee ?? (form.country.toLowerCase().includes("ghana")
     ? subtotal >= SITE.freeShippingThreshold ? 0 : SITE.shippingFeeGhana
     : SITE.shippingFeeInternational);
@@ -166,6 +195,10 @@ export default function Checkout() {
       toast.error("Please enter your delivery address.");
       return false;
     }
+    if (isGhana && branches.length > 0 && !form.deliveryBranch) {
+      toast.error("Please choose the branch to deliver from.");
+      return false;
+    }
     if (method === "mtn_momo" || method === "vodafone_cash" || method === "airteltigo") {
       if (!momoPhone.trim()) {
         toast.error("Enter the mobile money phone number.");
@@ -188,6 +221,7 @@ export default function Checkout() {
         city: form.city.trim(),
         street: form.street.trim(),
         digitalAddress: form.digitalAddress.trim() || null,
+        deliveryBranch: form.deliveryBranch || null,
         courier: quote
           ? {
               provider: quote.provider,
@@ -399,6 +433,31 @@ export default function Checkout() {
                       Picking one fills the details below automatically.
                     </p>
                   </div>
+                )}
+
+                {isGhana && branches.length > 0 && (
+                  <Field label="Deliver from branch" required className="mb-5">
+                    <Select
+                      value={form.deliveryBranch}
+                      onValueChange={(v) => set({ deliveryBranch: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose nearest branch…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.map((b) => (
+                          <SelectItem key={b.id} value={b.name}>
+                            {b.name}
+                            {b.address ? ` — ${b.address}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      We dispatch from the branch closest to your address for
+                      faster delivery.
+                    </p>
+                  </Field>
                 )}
 
                 <div className="grid gap-4 sm:grid-cols-2">

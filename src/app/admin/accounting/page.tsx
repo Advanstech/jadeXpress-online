@@ -11,20 +11,29 @@ export default function AdminAccountingPage() {
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: orders, isLoading: ordersLoading } = useAdminOrders();
 
-  const totalRevenue = stats?.revenue ?? 0;
-  
-  // Calculate mock expenses based on revenue for a realistic looking dashboard
-  const estimatedExpenses = totalRevenue * 0.45; // 45% margin example
-  const netProfit = totalRevenue - estimatedExpenses;
-  
-  const recentTransactions = orders?.slice(0, 8).map(o => ({
+  const orderList = orders ?? [];
+  const paidOrders = orderList.filter((o) => o.paymentStatus === "paid");
+  const pendingOrders = orderList.filter((o) => o.paymentStatus !== "paid");
+
+  const totalRevenue = paidOrders.reduce((s, o) => s + o.total, 0);
+  const pendingRevenue = pendingOrders.reduce((s, o) => s + o.total, 0);
+
+  const gatewayLabel = (gw?: string | null, method?: string | null) => {
+    if (gw === "ngenius") return "Card (N-Genius)";
+    if (gw === "paystack") return "Card (Paystack)";
+    if (gw === "stanbic" || gw === "advansis") return method === "card" ? "Card (Stanbic)" : "Mobile Money";
+    if (gw === "momo") return "Mobile Money";
+    return method ? method.replace(/_/g, " ") : "—";
+  };
+
+  const recentTransactions = orderList.slice(0, 12).map((o) => ({
     id: o.id,
     date: new Date(o.createdAt).toLocaleDateString(),
     description: `Order ${o.orderNumber}`,
     amount: o.total,
-    type: o.paymentStatus === 'paid' ? 'credit' : 'pending',
-    method: 'Mobile Money' // simplify for demo
-  })) ?? [];
+    settled: o.paymentStatus === "paid",
+    method: gatewayLabel(o.paymentGateway, o.paymentMethod),
+  }));
 
   return (
     <div className="space-y-6 relative">
@@ -64,9 +73,12 @@ export default function AdminAccountingPage() {
                   +12.5%
                 </span>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Gross Revenue</p>
+              <p className="text-sm font-medium text-muted-foreground">Paid Revenue</p>
               <p className="text-3xl font-bold font-display text-foreground mt-1">
                 {statsLoading ? "..." : formatGHS(totalRevenue)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {paidOrders.length} settled order{paidOrders.length === 1 ? "" : "s"}
               </p>
             </CardContent>
           </Card>
@@ -84,9 +96,12 @@ export default function AdminAccountingPage() {
                   -2.4%
                 </span>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Est. Expenses</p>
+              <p className="text-sm font-medium text-muted-foreground">Pending Collections</p>
               <p className="text-3xl font-bold font-display text-foreground mt-1">
-                {statsLoading ? "..." : formatGHS(estimatedExpenses)}
+                {statsLoading ? "..." : formatGHS(pendingRevenue)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {pendingOrders.length} unpaid order{pendingOrders.length === 1 ? "" : "s"}
               </p>
             </CardContent>
           </Card>
@@ -104,9 +119,12 @@ export default function AdminAccountingPage() {
                   +8.1%
                 </span>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Net Profit</p>
+              <p className="text-sm font-medium text-muted-foreground">Orders</p>
               <p className="text-3xl font-bold font-display text-foreground mt-1">
-                {statsLoading ? "..." : formatGHS(netProfit)}
+                {statsLoading ? "..." : orderList.length}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {stats?.pending ?? 0} awaiting fulfilment
               </p>
             </CardContent>
           </Card>
@@ -150,17 +168,15 @@ export default function AdminAccountingPage() {
                     <td className="px-6 py-4 font-medium text-foreground">{tx.description}</td>
                     <td className="px-6 py-4 text-muted-foreground">{tx.method}</td>
                     <td className="px-6 py-4 font-medium text-right text-foreground">
-                      {tx.type === 'credit' ? (
-                        <span className="text-emerald-500">+{formatGHS(tx.amount)}</span>
-                      ) : (
-                        <span className="text-muted-foreground">{formatGHS(tx.amount)}</span>
-                      )}
+                      <span className={tx.settled ? "text-emerald-500" : "text-muted-foreground"}>
+                        {tx.settled ? "+" : ""}{formatGHS(tx.amount)}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${
-                        tx.type === 'credit' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
+                        tx.settled ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
                       }`}>
-                        {tx.type === 'credit' ? 'Settled' : 'Pending'}
+                        {tx.settled ? 'Settled' : 'Pending'}
                       </span>
                     </td>
                   </motion.tr>

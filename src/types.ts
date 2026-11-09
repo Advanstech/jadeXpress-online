@@ -119,6 +119,8 @@ export interface OrderShippingAddress {
     eta?: string;
     trackingNumber?: string;
   } | null;
+  /** Fulfilment branch chosen at checkout (Dzorwulu / Israel Park / …). */
+  deliveryBranch?: string | null;
 }
 
 export interface OrderItem {
