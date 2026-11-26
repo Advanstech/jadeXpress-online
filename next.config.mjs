@@ -5,7 +5,7 @@ const contentSecurityPolicy = [
   "img-src 'self' blob: data: https://cdn.enter.pro https://res.cloudinary.com https://images.unsplash.com https://*.googleusercontent.com https://*.stanbicbank.com.gh https://*.advansistechnologies.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "connect-src 'self' https: wss: http://localhost:*",
-  "frame-src 'self' https://*.paystack.co https://*.stanbicbank.com.gh https://*.advansistechnologies.com",
+  "frame-src 'self' https://*.paystack.co https://*.stanbicbank.com.gh https://*.advansistechnologies.com https://maps.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https:",
