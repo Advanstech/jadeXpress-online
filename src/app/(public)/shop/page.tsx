@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, SlidersHorizontal, PackageOpen, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -75,23 +75,27 @@ export default function Shop() {
   const list = data?.pages.flatMap((page) => page.data.map(mapApiProduct)) ?? [];
   const total = data?.pages[0]?.meta?.total ?? list.length;
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [sentinelElement, setSentinelElement] = useState<HTMLDivElement | null>(null);
+
+  const observerCallback = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
 
   useEffect(() => {
-    if (!sentinelRef.current || !hasNextPage || isFetchingNextPage) return;
+    if (!sentinelElement || !hasNextPage || isFetchingNextPage) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: "300px" }
-    );
+    const observer = new IntersectionObserver(observerCallback, {
+      rootMargin: "300px",
+    });
 
-    observer.observe(sentinelRef.current);
+    observer.observe(sentinelElement);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [sentinelElement, hasNextPage, isFetchingNextPage, observerCallback]);
 
   const sidebar = (
     <ProductFiltersContent
@@ -210,7 +214,7 @@ export default function Shop() {
 
                 {/* Infinite Scroll Trigger Sentinel */}
                 <div
-                  ref={sentinelRef}
+                  ref={setSentinelElement}
                   className="mt-10 flex min-h-[60px] items-center justify-center py-6"
                 >
                   {isFetchingNextPage ? (

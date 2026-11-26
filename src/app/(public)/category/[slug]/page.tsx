@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "@/components/Link";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -74,23 +74,27 @@ export default function CategoryPage() {
   const list = data?.pages.flatMap((page) => page.data.map(mapApiProduct)) ?? [];
   const total = data?.pages[0]?.meta?.total ?? list.length;
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [sentinelElement, setSentinelElement] = useState<HTMLDivElement | null>(null);
+
+  const observerCallback = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
 
   useEffect(() => {
-    if (!sentinelRef.current || !hasNextPage || isFetchingNextPage) return;
+    if (!sentinelElement || !hasNextPage || isFetchingNextPage) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: "300px" }
-    );
+    const observer = new IntersectionObserver(observerCallback, {
+      rootMargin: "300px",
+    });
 
-    observer.observe(sentinelRef.current);
+    observer.observe(sentinelElement);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [sentinelElement, hasNextPage, isFetchingNextPage, observerCallback]);
 
   const displayCategoryName = category?.name || (resolvedSlug ? resolvedSlug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) : "Category");
   const displayTagline = category?.tagline || "Curated premium wellness & body care collection";
@@ -223,7 +227,7 @@ export default function CategoryPage() {
 
               {/* Infinite Scroll Trigger Sentinel */}
               <div
-                ref={sentinelRef}
+                ref={setSentinelElement}
                 className="mt-10 flex min-h-[60px] items-center justify-center py-6"
               >
                 {isFetchingNextPage ? (
