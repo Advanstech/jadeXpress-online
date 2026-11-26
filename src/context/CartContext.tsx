@@ -16,6 +16,8 @@ interface CartContextValue {
   items: CartItem[];
   itemCount: number;
   subtotal: number;
+  /** False until the persisted cart has been read on the client. */
+  hydrated: boolean;
   isCartOpen: boolean;
   addItem: (product: Product, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -38,17 +40,30 @@ function loadLocal(): CartItem[] {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(loadLocal);
+  // Start empty so the first client render matches the server HTML, then adopt
+  // localStorage after mount. Reading storage inside the initializer makes the
+  // very first client render differ from what was server-rendered — a
+  // hydration mismatch (the header cart badge was the visible symptom).
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
   const [isCartOpen, setCartOpen] = useState(false);
 
-  // Persist the working cart to localStorage (guest source of truth).
   useEffect(() => {
+    setItems(loadLocal());
+    setHydrated(true);
+  }, []);
+
+  // Persist the working cart to localStorage (guest source of truth).
+  // Must wait for the read above — otherwise this first run writes [] over the
+  // customer's saved cart.
+  useEffect(() => {
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {
       /* ignore quota errors */
     }
-  }, [items]);
+  }, [items, hydrated]);
 
   const addItem = useCallback(
     (product: Product, quantity = 1) => {
@@ -126,6 +141,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     items,
     itemCount,
     subtotal,
+    hydrated,
     isCartOpen,
     addItem,
     updateQuantity,

@@ -87,12 +87,14 @@ export function OrderView(order: OrderViewProps) {
                     />
                   )}
                 </div>
-                <div className="flex flex-1 justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">Qty {item.quantity}</p>
+                <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">
+                      {item.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Qty {item.quantity}</p>
                   </div>
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="shrink-0 whitespace-nowrap text-sm font-medium text-foreground">
                     {formatGHS(item.price * item.quantity)}
                   </span>
                 </div>

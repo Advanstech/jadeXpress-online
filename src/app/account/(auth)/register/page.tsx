@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link } from "@/components/Link";
 import { useNavigate } from "@/hooks/useNavigate";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { AuthShell } from "@/components/AuthShell";
@@ -17,6 +18,9 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Honour ?from= so a customer who came from checkout lands back there.
+  const from = useSearchParams()?.get("from") ?? "/account";
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) {
@@ -31,7 +35,7 @@ export default function Register() {
       return;
     }
     toast.success("Account created — welcome to JadeXpress!");
-    navigate("/account", { replace: true });
+    navigate(from, { replace: true });
   };
 
   return (

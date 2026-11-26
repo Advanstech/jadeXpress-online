@@ -83,16 +83,15 @@ export const POS_API_BASE = "https://jadexpress-api-production.up.railway.app";
 export const COURIER_MODE: "mock" | "live" = "mock";
 
 /**
- * Payment gateway. We integrate with Stanbic Bank Ghana (Advansis Gateway)
- * for Mobile Money (MTN, Telecel, AT) and Debit/Credit Card (Visa & Mastercard) collection.
+ * Card + Mobile Money collection.
+ *
+ * Stanbic Bank Ghana is the acquirer and Network International N-Genius is the
+ * processing rail: the shopper is redirected to the bank's hosted payment page
+ * where they pick card or MTN/Telecel/AT MoMo and approve the PIN prompt.
+ * There is no direct Stanbic/Advansis REST contract — never reintroduce the
+ * old 'stanbic' / 'mock-advansis' modes.
  */
-export const PAYMENT_MODE:
-  | "stanbic"
-  | "mock-stanbic"
-  | "mock-advansis"
-  | "live-advansis"
-  | "paystack"
-  | "ngenius" = "ngenius";
+export const PAYMENT_MODE: "ngenius" | "paystack" = "ngenius";
 
 /** Admin roles, strongest → weakest. */
 export const ADMIN_ROLES = ["owner", "super_admin", "admin", "manager", "supervisor", "stock_officer"] as const;

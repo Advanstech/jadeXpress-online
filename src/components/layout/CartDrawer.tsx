@@ -110,7 +110,7 @@ export function CartDrawer() {
                       <Link
                         to={`/product/${item.slug}`}
                         onClick={closeCart}
-                        className="line-clamp-2 text-sm font-medium leading-tight text-foreground hover:text-primary"
+                        className="line-clamp-2 min-w-0 text-sm font-medium leading-tight text-foreground hover:text-primary"
                       >
                         {item.name}
                       </Link>
