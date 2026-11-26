@@ -1,6 +1,6 @@
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://maps.googleapis.com https://*.paystack.co https://*.stanbicbank.com.gh https://*.advansistechnologies.com",
+  "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://maps.googleapis.com https://*.paystack.co https://*.stanbicbank.com.gh https://*.advansistechnologies.com https://jadexpress-api-production.up.railway.app",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' blob: data: https://cdn.enter.pro https://res.cloudinary.com https://images.unsplash.com https://*.googleusercontent.com https://*.stanbicbank.com.gh https://*.advansistechnologies.com",
   "font-src 'self' data: https://fonts.gstatic.com",
