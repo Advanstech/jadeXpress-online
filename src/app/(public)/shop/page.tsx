@@ -28,10 +28,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  StaggerGroup,
-  staggerItem,
-} from "@/components/motion/Reveal";
 
 const MAX_PRICE = 250;
 
@@ -204,13 +200,19 @@ export default function Shop() {
               </div>
             ) : (
               <>
-                <StaggerGroup className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
+                <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
                   {list.map((p) => (
-                    <motion.div key={p.id} variants={staggerItem}>
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, y: 24 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    >
                       <ProductCard product={p} />
                     </motion.div>
                   ))}
-                </StaggerGroup>
+                </div>
 
                 {/* Infinite Scroll Trigger Sentinel */}
                 <div
