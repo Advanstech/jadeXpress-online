@@ -29,7 +29,9 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const MAX_PRICE = 250;
+// Upper bound of the price slider — must cover the most expensive product
+// in the catalog (currently ~GH₵1,080) so the default view hides nothing.
+const MAX_PRICE = 1100;
 
 const sortOptions: { value: ProductSort; label: string }[] = [
   { value: "featured", label: "Featured" },
