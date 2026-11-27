@@ -16,6 +16,7 @@ const helpLinks = [
   { label: "Wellness quiz", to: "/quiz" },
   { label: "Shipping & returns", to: "/shipping-returns" },
   { label: "FAQs", to: "/faq" },
+  { label: "Manager app privacy", to: "/mobile-privacy" },
   { label: "Contact us", to: "/contact" },
 ];
 
